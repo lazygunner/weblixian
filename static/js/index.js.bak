@@ -1,9 +1,15 @@
+
+var removeFirstLink = function()
+{
+		$(".downloadLinks").first().remove();
+		$(".downloadLinks").first().css("color","green");
+};
+
 var DownloadStatus = function()
 	{
 	var that = this;
 	var registerError = function(XMLHttpRequest, textStatus, errorThrown)
 		{
-			//$("#results").append("<li class='error'>Error:" + textStatus + "</li>");
 			$("#button").removeAttr("disabled");
 		};
 	var registerSuccess = function(data, textStatus, XMLHttpRequest)
@@ -16,53 +22,56 @@ var DownloadStatus = function()
 		 			var per = downloadStatus.per;
 		 			var speed = downloadStatus.speed;
 		 			var eta = downloadStatus.eta;
-		 			var ok = downloadStatus.ok;
-		 			//$("#results").append("<li class='sucesss'>Estimated clock skew :<span class='measurement'>" + per + "</span> seconds.</li>");
-		 			//$("#results").append("<li class='sucesss'>Downloaded :<span class='measurement'>" + per + "</span>%.</li>");
+		 			var stat = downloadStatus.status;
 		 			var perString = per + '%';
+		 			
 		 			$(".bar").css("width", perString);
 		 			$("#perCon").text(perString);
 		 			$("#speed").text("下载速度:" + speed);
 		 			$("#eta").text("剩余时间:" + eta);
-		 			if(ok == 0)		 				
+		 			if(stat == 'ing'){		 				
 						DownloadStatus.buttonDownPress();
-					else if(ok == 1){
-						$(".downloadLinks").first().remove();
-						Download.buttonPress();
-					}
-					else if(ok == 2){
-						$(".downloadLinks").first().remove();
-					}
-					else							
 						return;
+					}
+					else if(stat == 'complete'){
+						removeFirstLink()
+						$(".bar").css("width", "0%");
+		 			$("#perCon").text("0%");
+						DownloadStatus.buttonDownPress();
+						return;
+					}
+					else if(stat == 'error'){
+						removeFirstLink()
+						return;
+					}
+					else if(stat == 'nomore'){
+						$(".downloadLinks").first().remove();
+						hideProcess();
+						return;
+					}
 		 		}
-		 	catch(error)
+		 		catch(error)
 		 		{
 		 			$("#results").append("<li class='error'>Error parsing JSON.</li>");
 		 			DownloadStatus.buttonDownPress();
 		 		}
-		 	$("#button").removeAttr("disabled");
+		 		$("#button").removeAttr("disabled");
 		 	
 		};
 		
+		
 	var buttonDownPress = function()
 		{
-
-		$.ajax({data:"", dataType:"text", error: registerError, 
-			success: registerSuccess, type: "POST",
-			url: "/check/"});
+			$.ajax({data:"", dataType:"text", error: registerError, 
+				success: registerSuccess, type: "POST",
+				url: "/check/"});
 		};
 	
 	return {
 		buttonDownPress: buttonDownPress
 		}
 	}();
-var check_delay = function(){
-	
-	
-	
-	
-};
+
 
 var Download = function(){
 		var that = this;
@@ -72,21 +81,28 @@ var Download = function(){
 		};
 		var registerSuccess = function(data, rextStatus, XMLHttpRequest)
 		{
-				if(data == "redown"){
-					alert("已在下载列表！");
-					return;
-				}
-				$("#linkList").append("<li class=\"downloadLinks\">" + data + "</li>")
+				data = decodeURIComponent(data);
+				if(data.length > 50)
+					data = data.substr(0, 47) + '...';
+				$("#linkList").append("<li class=\"downloadLinks\">" +  + "</li>");
+				showProgress();
 				DownloadStatus.buttonDownPress();
+
+				return;
 		};
 		
 		var buttonPress = function()
 		{
-			var downloadLink = {'link':$("#link").val()};
-			$("#link").val('');
+				var downloadLink = {'link':$("#link").val()};
+				if(downloadLink.link == ''){
+						alert("连接地址为空！");
+						return;
+				}
+					
+				$("#link").val('');
 			
-			$.ajax({data:downloadLink, datraType:"text", error: registerError,
-					success: registerSuccess, tyep: "POST", url:"/download/"});
+				$.ajax({data:downloadLink, datraType:"text", error: registerError,
+						success: registerSuccess, tyep: "POST", url:"/download/"});
 		};
 		
 		return{
@@ -96,13 +112,36 @@ var Download = function(){
 	
 }();
 
+var hideProcess = function() {
+		$('.bar').hide();
+		$('.graph').hide();
+		$('#speed').hide();
+		$('#eta').hide();		  
+	
+}
 
+var showProgress = function() {
+		$(".downloadLinks").first().css("color","green");
+		$('.bar').show();
+		$('.graph').show();
+		$('#speed').show();
+		$('#eta').show();
+	
+}
 
 $(document).ready(function() {
-	//var d = new Download();
-	//var s = new DownloadStatus();
+
 	$("#download").click(Download.buttonPress);
-	//DownloadStatus.buttonDownPress();
-//	$("#download").click(MeasureClockSkew.buttonPress);
-//	$("#button").click(test);
+	if($('.downloadLinks').size() > 0){
+		showProgress();
+    $(".downloadLinks").each(function(){
+    		$(this).text(decodeURIComponent($(this).text()));
+        if ($(this).text().length > 50) {
+            $(this).text($(this).text().substr(0, 47));
+            $(this).append('...');
+        }
+    });
+    DownloadStatus.buttonDownPress();
+	}
+
 });

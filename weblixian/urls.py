@@ -1,6 +1,6 @@
 from django.conf.urls import patterns
 #from webui.webui import hello
-from webui.views import index, download, check
+from webui.views import index, download, check, else_uri
 from django.conf import settings
 
 # Uncomment the next two lines to enable the admin:
@@ -11,6 +11,7 @@ urlpatterns = patterns('',
     ('^$', index),
     ('^download/$', download),
     ('^check/$', check),
+    ('', else_uri),
 )
 
 if settings.DEBUG: 

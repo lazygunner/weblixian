@@ -1,10 +1,8 @@
 import sys
 import subprocess
 import os
-import json
 import re
 
-from django.http import HttpResponse
 from models import pop_link
 
 class downloadProcess:
@@ -13,6 +11,9 @@ class downloadProcess:
     isDownloading = False
  
     def download_link(self, link):
+        
+        #test
+        #return 0
         
         if self.isDownloading == False:
             self.isDownloading = True
@@ -31,9 +32,13 @@ class downloadProcess:
     
     
     def check_stat(self, request):
-
+        
+        #test
+        #pop_link()
+        #return {u'per': '100', u'speed': 0, u'eta': '0', u'status': 'complete'}
+        
         if self.pipe == None:
-            return HttpResponse(json.dumps({u'per': '0', u'speed': 0, u'eta': '0', u'ok': '3'}), mimetype=u'application/json')
+            return {u'per': '0', u'speed': 0, u'eta': '0', u'status': 'pipenone'}
         
         pattern = re.compile(r'(?P<per>\d{1,2})%.*DL:(?P<speed>(\d{1,3}|\d\.\d)\w*)\sETA:(?P<eta>\w*)]')
                
@@ -42,22 +47,22 @@ class downloadProcess:
             print data
             m = pattern.search(data)
             if m:
-                d_json = json.dumps({u'per': m.group('per'), u'speed': m.group('speed'), u'eta': m.group('eta'), u'ok': '0'})
+                d_json = {u'per': m.group('per'), u'speed': m.group('speed'), u'eta': m.group('eta'), u'status': 'ing'}
                 print d_json
                 self.pipe.stdout.flush()
-                return HttpResponse(d_json, mimetype=u'application/json')
+                return d_json
             elif re.search(r'.*completed\..*', data) != None:  #when the download complete
                 self.pipe.stdout.flush()
                 self.isDownloading = False
                 self.pipe = None
                 pop_link()
-                return HttpResponse(json.dumps({u'per': '100', u'speed': 0, u'eta': '0', u'ok': '1'}), mimetype=u'application/json')
+                return {u'per': '100', u'speed': 0, u'eta': '0', u'status': 'complete'}
             else:
                 data=self.pipe.stdout.readline()
         
         self.isDownloading = False
         pop_link()
-        return HttpResponse(json.dumps({u'per': '0', u'speed': 0, u'eta': '0', u'ok': '2'}), mimetype=u'application/json')
+        return {u'per': '0', u'speed': 0, u'eta': '0', u'status': 'error'}
     
     
     def stop_down(self):
