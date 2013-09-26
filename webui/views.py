@@ -1,9 +1,8 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext
 from django.shortcuts import render_to_response
 from models import get_all, add, get_first
 from webui import downloadProcess
-from django.core.context_processors import csrf
 import json
 
 global process
@@ -11,15 +10,18 @@ process = None
 
 def download(request):
     global process
+    if(process == None):
+        return HttpResponseRedirect('/')
     link = request.GET.get('link')
 #    print link
     if link != '':
-        if(add(link) == 0):    
-            process.download_link(link)
+        down_link = add(link)
+        if(down_link != None):    
+            process.download_link(down_link)
         else:
             return HttpResponse('redown')
 
-    return HttpResponse(link)
+    return HttpResponse(down_link)
 
 def check(request):
     global process

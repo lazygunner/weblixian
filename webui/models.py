@@ -1,11 +1,15 @@
+import re
 
 links = []
 
 def add(link):
-    if(links.count(link) != 0):
-        return -1
-    links.append(link)
-    return 0
+    p = re.compile(r'\s')
+    link_group = p.split(link)
+    for link in link_group: 
+        if(links.count(link) != 0):
+            continue
+        links.append(link)
+    return link_group.pop(0)
 
 def get_first():
     try:    
