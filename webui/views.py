@@ -1,25 +1,35 @@
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext
 from django.shortcuts import render_to_response
-from models import get_all, add, get_first
-from webui import downloadProcess
+from models import get_all, add, get_first, add_link_list
+from webui import DownloadProcess
+from autodownload import AutoDownload
 import json
 
 global process
 process = None
+global ad
+ad = None
+
 
 def download(request):
     global process
+    global ad
     if(process == None):
         return HttpResponseRedirect('/')
     link = request.GET.get('link')
-#    print link
-    if link != '':
+    if link != '1':
         down_link = add(link)
-        if(down_link != None):    
-            process.download_link(down_link)
-        else:
-            return HttpResponse('redown')
+    else:
+        link = ad.get_updates()
+        print link
+        down_link = add_link_list(link)
+        print down_link
+
+    if(down_link != None):    
+        process.download_link(down_link)
+    else:
+        return HttpResponse('redown')
 
     return HttpResponse(down_link)
 
@@ -40,12 +50,15 @@ def check(request):
 
 def index(request):
     global process
+    global ad
     
     print user_ip(request)
     
     links = get_all()
     if process == None:
-        process = downloadProcess()
+        process = DownloadProcess()
+    if ad == None:
+        ad = AutoDownload()
 #    print links
     #c = {}
     #c.update(csrf(request))

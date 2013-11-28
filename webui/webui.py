@@ -5,7 +5,7 @@ import re
 
 from models import pop_link
 
-class downloadProcess:
+class DownloadProcess:
     
     pipe = None
     isDownloading = False
