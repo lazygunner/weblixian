@@ -22,8 +22,7 @@ class DownloadProcess:
         outDir = "K:\\\\home\\downloads\\"
         try:
             path = os.path.join(os.path.dirname(__file__), '../xunlei-lixian/').replace('\\','/')
-            self.pipe = subprocess.Popen([sys.executable, '-u', path + "lixian_cli.py", "download", link, "-c", "--output-dir", outDir], 
-                                         shell=False, stdout=subprocess.PIPE)
+            self.pipe = subprocess.Popen([sys.executable, '-u', path + "lixian_cli.py", "download", link, "-c", "--output-dir", outDir], shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             
         except:
             return -1
@@ -40,25 +39,25 @@ class DownloadProcess:
         if self.pipe == None:
             return {u'per': '0', u'speed': 0, u'eta': '0', u'status': 'pipenone'}
         
-        pattern = re.compile(r'(?P<per>\d{1,2})%.*DL:(?P<speed>(\d{1,3}|\d\.\d)\w*)\sETA:(?P<eta>\w*)]')
+        pattern = re.compile(r'(?P<per>\d{1,2})%\s*(?P<speed>(\d{1,3}|\d{1,2}\.\d)\w*)\s(?P<eta>\w*)]')
                
-        data = self.pipe.stdout.readline()
+        data = self.pipe.stderr.readline()
         while  data:
             print data
             m = pattern.search(data)
             if m:
                 d_json = {u'per': m.group('per'), u'speed': m.group('speed'), u'eta': m.group('eta'), u'status': 'ing'}
                 print d_json
-                self.pipe.stdout.flush()
+                self.pipe.stderr.flush()
                 return d_json
             elif re.search(r'.*completed\..*', data) != None:  #when the download complete
-                self.pipe.stdout.flush()
+                self.pipe.stderr.flush()
                 self.isDownloading = False
                 self.pipe = None
                 pop_link()
                 return {u'per': '100', u'speed': 0, u'eta': '0', u'status': 'complete'}
             else:
-                data=self.pipe.stdout.readline()
+                data=self.pipe.stderr.readline()
         
         self.isDownloading = False
         pop_link()

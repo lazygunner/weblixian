@@ -14,7 +14,6 @@ def add(link):
 
 def add_link_list(link):
     link_list = map(lambda xx:xx['ed2k_link'], link)
-    print link_list
     links.append(link_list)
     return link_list.pop(0)
 

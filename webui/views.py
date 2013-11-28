@@ -22,9 +22,7 @@ def download(request):
         down_link = add(link)
     else:
         link = ad.get_updates()
-        print link
         down_link = add_link_list(link)
-        print down_link
 
     if(down_link != None):    
         process.download_link(down_link)
